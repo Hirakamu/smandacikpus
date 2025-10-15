@@ -6,3 +6,6 @@ venv
 *.pyc
 
 *__pycache__
+
+tools/20*
+tools/paidscrapper.py

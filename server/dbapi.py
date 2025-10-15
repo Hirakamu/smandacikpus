@@ -21,8 +21,7 @@ CREATE TABLE IF NOT EXISTS reads (
     creator TEXT,
     created TEXT,
     type TEXT,
-    preview TEXT,
-    mtime REAL
+    preview TEXT
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -156,7 +155,7 @@ class ReadsAPI: # complete
 
     @staticmethod
     @lru_cache(maxsize=512)
-    def pageList(offset: int = 0, limit: int = 10, query: str = "") -> Dict[str, Any]: # complete
+    def pageList(offset: int = 0, limit: int = PREVIEWLIMIT, query: str = "") -> Dict[str, Any]: # complete
         DButils.init_db()
         connection = DButils.connect()
         
@@ -210,16 +209,15 @@ class ReadsAPI: # complete
                         k, v = line.split(":", 1)
                         meta[k.strip()] = v.strip()
             
-            preview = text_snippet(body, 180)
-            now = datetime.now(timezone.utc)
+            preview = text_snippet(body, PREVIEWWORD)
 
             connection.execute(
                 """
                 INSERT OR REPLACE INTO reads
-                (uuid, title, creator, created, type, preview, mtime)
+                (uuid, title, creator, created, type, preview)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                [meta["uuid"], meta["title"], meta["creator"], meta["date"], meta["type"], preview, now.timestamp()],
+                [meta["uuid"], meta["title"], meta["creator"], meta["date"], meta["type"], preview],
             )
         connection.commit()
         print(f"Imported: {connection.total_changes}")
@@ -234,6 +232,7 @@ class ReadsAPI: # complete
             "SELECT * FROM reads WHERE uuid = ?",
             [uuid]
         )
+        connection.close()
         row = cursor.fetchone()
         if row:
             md_path = Path(PAGEDIR) / datetime.fromisoformat(row['created'].replace("\'","")).strftime("%Y/%m/%d") / f"{uuid}.md"
