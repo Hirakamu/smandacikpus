@@ -1,11 +1,17 @@
+#user's venv
 .venv
 venv
 
+#workspaces
 *.code-workspace
 
+#pycache
 *.pyc
-
 *__pycache__
 
+#some personal data
 tools/20*
 tools/paidscrapper.py
+
+#user's vscode config
+.vscode
