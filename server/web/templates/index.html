@@ -1,102 +1,115 @@
-{% extends "base.html" %}
-
 {% block title %}Home - SMAN 2 Cikpus{% endblock %}
 
 {% block content %}
 
-<!-- Hero / Intro -->
-<section class="hero mb-4">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo"
+        style="height:36px; width:auto; margin-right:8px;">
+      <strong>SMAN 2 Cikpus</strong>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="#about">Tentang</a></li>
+        <li class="nav-item"><a class="nav-link" href="#programs">Program</a></li>
+        <li class="nav-item"><a class="nav-link" href="#teachers">Guru</a></li>
+        <li class="nav-item"><a class="nav-link" href="#prestasi">Prestasi</a></li>
+        <li class="nav-item"><a class="nav-link" href="#showcase">Berita</a></li>
+        <li class="nav-item"><a class="nav-link btn btn-sm btn-primary text-white ms-2" href="#cta">Kontak</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero py-5" style="background: linear-gradient(120deg,#0d6efd22,#6c757d11);">
   <div class="container">
     <div class="row align-items-center">
-      <div class="col-md-7">
-        <h1 class="mb-2">SMAN 2 Cikarang Pusat</h1>
-        <p class="lead">Moving for bright future.</p>
-        <p class="mt-3">
+      <div class="col-lg-7">
+        <h1 class="display-5 mb-3">SMAN 2 Cikarang Pusat</h1>
+        <p class="lead text-muted">Moving for bright future.</p>
+        <div class="mt-4">
           <a href="#about" class="btn btn-primary me-2">Tentang kami</a>
-          <a href="#programs" class="btn btn-secondary me-2">Prestasi</a>
-          <a href="#teachers" class="btn btn-info me-2">Guru</a>
-          <a href="#prestasi" class="btn btn-success me-2">Pencapaian</a>
-        </p>
+          <a href="#programs" class="btn btn-outline-secondary me-2">Program</a>
+          <a href="#teachers" class="btn btn-outline-info me-2">Guru</a>
+          <a href="#prestasi" class="btn btn-success">Pencapaian</a>
+        </div>
       </div>
-      <div class="col-md-5 d-none d-md-block text-center">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="School" style="max-width:260px;">
+      <div class="col-lg-5 text-center d-none d-lg-block">
+        <div class="card border-0 bg-transparent">
+          <div class="card-body">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="School logo" class="img-fluid"
+              style="max-width:260px;">
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- About -->
-<section id="about" class="py-4 mb-4 bg-white">
+<!-- About + Stats -->
+<section id="about" class="py-5 bg-white">
   <div class="container">
-    <div class="row">
-      <div class="col-md-8">
+    <div class="row gy-4 align-items-center">
+      <div class="col-lg-7">
         <h3>Tentang SMAN 2 Cikarang Pusat</h3>
-        <p class="text-muted">(desc)</p>
+        <p class="text-muted">{{ (desc if desc else 'Kami berkomitmen membentuk generasi yang cerdas dan berakhlak
+          mulia. Tambahkan deskripsi sekolah di dashboard admin.') }}</p>
+        <a href="/about" class="small">Baca selengkapnya →</a>
       </div>
-      <div class="col-md-4">
-        <h5>Quick Facts</h5>
-        <ul class="small-muted list-unstyled">
-          <li>Berdiri sejak : 1998</span></li>
-          <li>Total siswa: <span class="count" data-target="1098"></span> siswa</li>
-          <li>Accreditation: A</li>
-        </ul>
+      <div class="col-lg-5">
+        <div class="row text-center">
+          <div class="col-4">
+            <div class="mb-1 small text-muted">Berdiri sejak</div>
+            <div class="fw-bold">1998</div>
+          </div>
+          <div class="col-4">
+            <div class="mb-1 small text-muted">Total siswa</div>
+            <div class="fw-bold"><span class="count" data-target="1098">0</span></div>
+          </div>
+          <div class="col-4">
+            <div class="mb-1 small text-muted">Akreditasi</div>
+            <div class="fw-bold">A</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const counters = document.querySelectorAll(".count");
-
-  const animateCount = (el) => {
-    const target = +el.getAttribute("data-target");
-    const duration = 1500; // ms
-    const stepTime = 20;
-    const steps = duration / stepTime;
-    const increment = target / steps;
-    let count = 0;
-
-    const timer = setInterval(() => {
-      count += increment;
-      if (count >= target) {
-        count = target;
-        clearInterval(timer);
-      }
-      el.textContent = Math.floor(count);
-    }, stepTime);
-  };
-
-  // Start when visible
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animateCount(entry.target);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.6 });
-
-  counters.forEach(el => observer.observe(el));
-});
-</script>
-
-
-<!-- Programs / Features -->
-<section id="programs" class="py-4 mb-4 bg-light">
+<!-- Programs -->
+<section id="programs" class="py-5 bg-light">
   <div class="container">
-    <h3 class="mb-3">Program sekolah</h3>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Program Sekolah</h3>
+      <small class="text-muted">Kurikulum dan ekstrakurikuler unggulan</small>
+    </div>
 
     {% if programs and programs|length > 0 %}
     <div id="programCarousel" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        {% for p in programs %}
+        <button type="button" data-bs-target="#programCarousel" data-bs-slide-to="{{ loop.index0 }}" {% if loop.first
+          %}class="active" aria-current="true" {% endif %} aria-label="Slide {{ loop.index }}"></button>
+        {% endfor %}
+      </div>
+
       <div class="carousel-inner">
         {% for p in programs %}
         <div class="carousel-item {% if loop.first %}active{% endif %}">
           <div class="d-flex justify-content-center">
-            <div class="card shadow-sm" style="width: 18rem;">
+            <div class="card shadow-sm" style="width: 20rem;">
               <div class="card-body text-center">
-                <h5>{{ p.title }}</h5>
+                <h5 class="card-title">{{ p.title }}</h5>
                 <p class="small text-muted">{{ p.description }}</p>
+                {% if p.link %}
+                <a href="{{ p.link }}" class="stretched-link"></a>
+                {% endif %}
               </div>
             </div>
           </div>
@@ -104,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
         {% endfor %}
       </div>
 
-      <!-- Carousel controls -->
       <button class="carousel-control-prev" type="button" data-bs-target="#programCarousel" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Previous</span>
@@ -115,16 +127,20 @@ document.addEventListener("DOMContentLoaded", () => {
       </button>
     </div>
     {% else %}
-      <p class="text-center text-muted">Program sekolah gagal dimuat.</p>
+    <div class="card text-center p-3">
+      <div class="card-body text-muted">Program sekolah belum tersedia.</div>
+    </div>
     {% endif %}
-
   </div>
 </section>
 
 <!-- Teachers -->
-<section id="teachers" class="py-4 mb-4 bg-white">
+<section id="teachers" class="py-5 bg-white">
   <div class="container">
-    <h3 class="mb-3">Guru-guru</h3>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Guru-guru</h3>
+      <small class="text-muted">Tim pengajar profesional</small>
+    </div>
 
     {% if gurus %}
     <div id="teacherCarousel" class="carousel slide" data-bs-ride="carousel">
@@ -132,12 +148,13 @@ document.addEventListener("DOMContentLoaded", () => {
         {% for guru in gurus %}
         <div class="carousel-item {% if loop.first %}active{% endif %}">
           <div class="d-flex justify-content-center">
-            <div class="card shadow-sm text-center" style="width: 18rem;">
-              <img src="{{ url_for('static', filename='images/teacher-placeholder.svg') }}" 
-                   class="card-img-top" alt="Teacher" style="height:200px; object-fit:cover;">
+            <div class="card shadow-sm text-center" style="width: 20rem;">
+              <img
+                src="{{ url_for('static', filename=guru.photo if guru.photo else 'images/teacher-placeholder.svg') }}"
+                class="card-img-top" alt="Foto {{ guru.name }}" loading="lazy" style="height:200px; object-fit:cover;">
               <div class="card-body">
                 <h5 class="card-title">{{ guru.name }}</h5>
-                <p class="card-text">{{ guru.subject }}</p>
+                <p class="card-text small text-muted">{{ guru.subject }}</p>
                 <p class="small text-muted">{{ guru.description }}</p>
               </div>
             </div>
@@ -146,7 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
         {% endfor %}
       </div>
 
-      <!-- Carousel controls -->
       <button class="carousel-control-prev" type="button" data-bs-target="#teacherCarousel" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Previous</span>
@@ -157,15 +173,20 @@ document.addEventListener("DOMContentLoaded", () => {
       </button>
     </div>
     {% else %}
-      <p class="text-center text-muted">Guru gagal dimuat.</p>
+    <div class="card text-center p-3">
+      <div class="card-body text-muted">Data guru belum tersedia.</div>
+    </div>
     {% endif %}
   </div>
 </section>
 
-<!-- Prestasi / Achievements -->
-<section id="prestasi" class="py-4 mb-4 bg-light">
+<!-- Prestasi -->
+<section id="prestasi" class="py-5 bg-light">
   <div class="container">
-    <h3 class="mb-3">Prestasi</h3>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Prestasi</h3>
+      <small class="text-muted">Pencapaian siswa dan sekolah</small>
+    </div>
 
     {% if prestasi and prestasi|length > 0 %}
     <div id="prestasiCarousel" class="carousel slide" data-bs-ride="carousel">
@@ -173,11 +194,12 @@ document.addEventListener("DOMContentLoaded", () => {
         {% for p in prestasi %}
         <div class="carousel-item {% if loop.first %}active{% endif %}">
           <div class="d-flex justify-content-center">
-            <div class="card shadow-sm text-center" style="width: 18rem;">
+            <div class="card shadow-sm text-center" style="width: 20rem;">
               <div class="card-body">
-                <i class="{{ p.icon }} fa-3x mb-3" style="color: {{ p.color }}"></i>
+                <div class="mb-3" aria-hidden="true"><i class="{{ p.icon }} fa-3x" style="color: {{ p.color }}"></i>
+                </div>
                 <h5 class="card-title">{{ p.title }}</h5>
-                <p class="card-text">{{ p.subtitle }}</p>
+                <p class="card-text small text-muted">{{ p.subtitle }}</p>
                 <p class="small text-muted">{{ p.preview }}</p>
               </div>
             </div>
@@ -186,7 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
         {% endfor %}
       </div>
 
-      <!-- Carousel controls -->
       <button class="carousel-control-prev" type="button" data-bs-target="#prestasiCarousel" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Previous</span>
@@ -197,101 +218,109 @@ document.addEventListener("DOMContentLoaded", () => {
       </button>
     </div>
     {% else %}
-      <p class="text-center text-muted">Prestasi gagal dimuat.</p>
+    <div class="card text-center p-3">
+      <div class="card-body text-muted">Belum ada prestasi tercatat.</div>
+    </div>
     {% endif %}
-
   </div>
 </section>
 
-
-
-<!-- Showcase / Latest News -->
-<section id="showcase" class="py-4 mb-4 bg-white">
+<!-- News -->
+<section id="showcase" class="py-5 bg-white">
   <div class="container">
-    <h3 class="mb-3">Berita</h3>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Berita</h3>
+      <small class="text-muted">Update terbaru sekolah</small>
+    </div>
 
     <div class="row g-3">
       {% if news and news|length > 0 %}
-        {% for a in news %}
-        <div class="col-md-6">
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title">{{ a.title }}</h5>
-              <p class="meta">Published: {{ a.created }}</p>
-              <p class="card-text">{{ a.preview }}</p>
-              <!-- Read more directs to /read/<uuid> -->
-              <a href="{{ url_for('site.read', uuid=a.uuid) }}" class="btn btn-sm btn-primary">Read more</a>
-            </div>
+      {% for a in news %}
+      <div class="col-md-6">
+        <article class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">{{ a.title }}</h5>
+            <p class="meta text-muted small">Published: {{ a.created }}</p>
+            <p class="card-text">{{ a.preview }}</p>
           </div>
-        </div>
-        {% endfor %}
+          <div class="card-footer bg-transparent border-0">
+            <a href="{{ url_for('site.read', uuid=a.uuid) }}" class="btn btn-sm btn-primary">Read more</a>
+          </div>
+        </article>
+      </div>
+      {% endfor %}
       {% else %}
-        <div class="col-12">
-          <p class="text-muted text-center">Berita gagal dimuat.</p>
-        </div>
+      <div class="col-12">
+        <p class="text-muted text-center">Berita belum tersedia.</p>
+      </div>
       {% endif %}
     </div>
   </div>
 </section>
 
-
-<section id="articles" class="mb-5">
+<section id="articles" class="py-5 bg-light">
   <div class="container">
-    <h3 class="mb-3">Artikel</h3>
-    <div class="row g-3">
-      {% if articles and articles|length > 0 %}
-        {% for a in articles %}
-        <div class="col-md-6">
-          <div class="card h-100 shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title">{{ a.title }}</h5>
-              <p class="card-text text-muted small mb-2">{{ a.created }}</p>
-              <p class="card-text text-muted small mb-2">Oleh {{ a.creator }}</p>
-              <p class="card-text">{{ a.preview }}</p>
-            </div>
-            <div class="card-footer bg-transparent border-0">
-              <a href="{{ url_for('site.read', uuid=a.uuid) }}" class="btn btn-sm btn-primary">Read more</a>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Artikel</h3>
+      <a href="" class="btn btn-sm btn-outline-primary">More like this</a>
+    </div>
+
+    {% if articles and articles|length > 0 %}
+    <div class="article-slider d-flex overflow-auto gap-4 pb-3">
+      {% for a in articles %}
+      <a href="{{ url_for('site.read', uuid=a.uuid) }}" class="text-decoration-none text-dark" style="flex: 0 0 500px;">
+        <div class="card h-100 shadow-sm hover-shadow">
+          <div class="card-body">
+            <h5 class="card-title">{{ a.title }}</h5>
+            <p class="card-text text-muted small mb-2">{{ a.created }} | Oleh {{ a.creator }}</p>
+            <p class="card-text">{{ a.preview }}</p>
           </div>
         </div>
-        {% endfor %}
-      {% else %}
-        <div class="col-12">
-          <p class="text-muted text-center">Artikel gagal dimuat.</p>
-        </div>
-      {% endif %}
+      </a>
+      {% endfor %}
     </div>
+    {% else %}
+    <p class="text-muted text-center">Artikel belum tersedia.</p>
+    {% endif %}
   </div>
+
+  <style>
+    .article-slider::-webkit-scrollbar { height: 8px; }
+    .article-slider::-webkit-scrollbar-thumb { background: #bbb; border-radius: 4px; }
+    .hover-shadow:hover {
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
+      transition: all 0.2s;
+    }
+  </style>
 </section>
 
 
-<!-- CTA / Contact -->
+<!-- Contact -->
 <section id="cta" class="py-5 bg-white">
   <div class="container">
     <div class="text-center mb-4">
       <h4>Hubungi Kami</h4>
-      <p class="text-muted">Hubungi staff kami untuk memberikan tanggapan anda.</p>
+      <p class="text-muted">Berikan tanggapan atau pertanyaan anda.</p>
     </div>
 
-    <form id="contactForm" method="POST" action="" class="mx-auto" style="max-width: 600px;">
+    <form id="contactForm" method="POST" action="" class="mx-auto" style="max-width: 600px;" novalidate>
       <div class="mb-3">
         <label for="name" class="form-label">Nama Lengkap</label>
-        <input type="text" id="name" name="name" class="form-control" placeholder="Masukkan nama Anda" required>
+        <input type="text" id="name" name="name" class="form-control" placeholder="Nama Anda" required>
+        <div class="invalid-feedback">Nama wajib diisi.</div>
       </div>
 
       <div class="mb-3">
-        <label for="email" class="form-label">Alamat Email</label>
-        <input type="email" id="email" name="email" class="form-control" placeholder="email@email.com" required>
-      </div>
-
-      <div class="mb-3">
-        <label for="phone" class="form-label">Nomor Telepon (opsional)</label>
-        <input type="tel" id="phone" name="phone" class="form-control" placeholder="+62...">
+        <label for="email" class="form-label">Alamat Email (opsional)</label>
+        <input type="email" id="email" name="email" class="form-control" placeholder="email@email.com">
       </div>
 
       <div class="mb-3">
         <label for="message" class="form-label">Pesan</label>
-        <textarea id="message" name="message" class="form-control" rows="4" placeholder="Tulis pesan Anda di sini..." required></textarea>
+        <textarea id="message" name="message" class="form-control" rows="4" placeholder="Tulis pesan Anda di sini..."
+          required></textarea>
+        <div class="invalid-feedback">Pesan wajib diisi.</div>
       </div>
 
       <div class="text-center">
@@ -301,27 +330,61 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </section>
 
+<footer class="py-4 bg-dark text-white">
+  <div class="container d-flex justify-content-between">
+    <small>&copy; 2025 SMAN 2 Cikarang Pusat</small>
+    <small>Designed with Bootstrap. <a href="https://getbootstrap.com" class="link-light">Bootstrap</a></small>
+  </div>
+</footer>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("contactForm");
-  let formDirty = false;
+  // Counter using requestAnimationFrame for smoothness
+  document.addEventListener('DOMContentLoaded', () => {
+    const counters = document.querySelectorAll('.count');
 
-  form.addEventListener("input", () => {
-    formDirty = true;
-  });
+    const animate = (el, target, duration = 1500) => {
+      let start = null;
+      const step = timestamp => {
+        if (!start) start = timestamp;
+        const progress = Math.min((timestamp - start) / duration, 1);
+        el.textContent = Math.floor(progress * target);
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
 
-  form.addEventListener("submit", () => {
-    formDirty = false;
-  });
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.getAttribute('data-target') || '0', 10);
+          animate(el, target);
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.4 });
 
-  window.addEventListener("beforeunload", (e) => {
-    if (formDirty) {
-      e.preventDefault();
-    }
+    counters.forEach(c => observer.observe(c));
+
+    // Simple client-side form validation
+    const form = document.getElementById('contactForm');
+    form.addEventListener('submit', e => {
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+        form.classList.add('was-validated');
+      }
+    });
+
+    // Prevent accidental unload if form dirty
+    let dirty = false;
+    form.addEventListener('input', () => dirty = true);
+    form.addEventListener('submit', () => dirty = false);
+    window.addEventListener('beforeunload', e => { if (dirty) e.preventDefault(); });
   });
-});
 </script>
-
-
-
 {% endblock %}
