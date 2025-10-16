@@ -1,5 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template
-from typing import Any
+from flask import Blueprint, jsonify, render_template
 from dbapi import ReadsAPI
 from errors import register_error_handlers
 
