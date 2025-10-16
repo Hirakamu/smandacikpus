@@ -34,4 +34,4 @@ def read(uuid: str):
         abort(404)
 
     p["content"] = markdown(p["content"], extensions=["fenced_code", "tables"])
-    return render_template("baca.html", article=p)
+    return render_template("baca.html", page=p)
