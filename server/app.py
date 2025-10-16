@@ -6,7 +6,7 @@ from datetime import timedelta
 from routes.api import bp as api_bp
 from routes.site import bp as site_bp
 from errors import register_error_handlers
-from dbapi import GLOBALSCHEMA, DButils
+from dbapi import DButils
 from sqlite3 import Connection as sqlite
 
 def create_app():
@@ -22,8 +22,7 @@ def create_app():
 
     register_error_handlers(app)
     
-    with app.app_context():
-        DButils.syncAll()
-        DButils.close() 
+    app.teardown_appcontext(lambda e: DButils.close())  # auto close after request
+    DButils.init_db()  # initialize once
 
     return app
