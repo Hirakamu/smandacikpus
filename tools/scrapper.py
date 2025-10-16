@@ -1,9 +1,6 @@
-import random, uuid, os, requests, yaml, json
+import random, uuid, os, requests, yaml
 from datetime import datetime, timedelta
 
-totaldata = 0
-expth = f"{datetime.now():%Y_%m_%d-%H_%M_%S.%f}"
-os.makedirs(expth, exist_ok=True)
 for i in range(1):
     url = "https://fakerapi.it/api/v2/texts?_quantity=100&_characters=2048"
     base_dir = "/var/lib/smandacikpus/content/pages"
@@ -11,9 +8,6 @@ for i in range(1):
     # Fetch
     res = requests.get(url)
     data = res.json()["data"]
-    filepath = os.path.join(expth, f"{i+1}.json")
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(res.json(), f, ensure_ascii=False, indent=2)
 
     # Random datetime generator
     def random_datetime(start, end):
@@ -40,7 +34,7 @@ for i in range(1):
 
 
         # Generate UUID5 using title + timestamp
-        file_uuid = str(uuid.uuid5(NAMESPACE, entry['title'] + str(rand_dt.timestamp())))
+        file_uuid = str(uuid.uuid5(NAMESPACE, entry['title'] + str(rand_dt.timestamp()))).replace('-', '')
 
         # Markdown content with YAML front matter
         yaml_config = {
@@ -57,6 +51,4 @@ for i in range(1):
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(md_content)
 
-    print(i+1)
-
-print(f"\n| {totaldata} Scrapped")
+print("100 Scrapped")
