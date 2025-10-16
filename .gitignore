@@ -15,3 +15,6 @@ tools/paidscrapper.py
 
 #user's vscode config
 .vscode
+
+# development output folder
+devdata/
