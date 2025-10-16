@@ -11,5 +11,9 @@ def error(code: int, message: str): # complete
 
 @bp.route('/api/page/import') # complete
 def readsImport():
-    res = ReadsAPI.importFromDir
-    return jsonify({"status": "berhasil"})
+    res = ReadsAPI.importFromDir()
+    return jsonify({"status": f"{res}"})
+
+@bp.route('/api/ping')
+def ping():
+    return jsonify({"status": 200, "description": "received"})

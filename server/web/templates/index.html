@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+
 {% block title %}Home - SMAN 2 Cikpus{% endblock %}
 
 {% block content %}
@@ -337,9 +339,6 @@
   </div>
 </footer>
 
-{% endblock %}
-
-{% block scripts %}
 {{ super() }}
 <script>
   // Counter using requestAnimationFrame for smoothness
@@ -387,4 +386,5 @@
     window.addEventListener('beforeunload', e => { if (dirty) e.preventDefault(); });
   });
 </script>
+
 {% endblock %}

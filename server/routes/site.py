@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, abort
 from dbapi import ReadsAPI
 from markdown import markdown
+from functools import lru_cache
 
 bp = Blueprint("site", __name__)
 
@@ -28,6 +29,7 @@ def home():
 
 
 @bp.route("/baca/<uuid>")
+@lru_cache(maxsize=1024)
 def read(uuid: str):
     p = ReadsAPI.read(uuid)
     if not p:

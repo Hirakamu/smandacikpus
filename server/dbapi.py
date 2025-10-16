@@ -60,8 +60,7 @@ class DButils:
     @staticmethod
     def init_db():
         # safe one-shot init using a short-lived connection
-        with sqlite3.connect(DB_FILE) as conn:
-            conn.row_factory = sqlite3.Row
+        with DButils.connection() as conn:
             conn.executescript(GLOBALSCHEMA)
             conn.commit()
         print("DB Initialized")
