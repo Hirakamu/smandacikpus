@@ -20,11 +20,7 @@ def home():
     
     return render_template(
         "index.html",
-        articles=items,
-        page=page,
-        total=len(items),
-        q=q,
-        limit=limit,
+        articles=items
     )
 
 
