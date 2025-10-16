@@ -3,7 +3,8 @@ from datetime import timezone, timedelta
 
 
 ROOT = Path(__file__).parent
-USERDATA = Path("/var/lib/smandacikpus/content/")
+USERDATA = Path(ROOT/"devdata") # development
+#USERDATA = Path("/var/lib/smandacikpus/content/") # production
 TEACHERJSON = USERDATA / "teachers.json"
 LOGINJSON = USERDATA / "login.json"
 DB_FILE = USERDATA / "data.db"
