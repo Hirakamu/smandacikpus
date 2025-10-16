@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, abort
 from dbapi import ReadsAPI
+from markdown import markdown
 
 bp = Blueprint("site", __name__)
 
@@ -29,4 +30,8 @@ def home():
 @bp.route("/baca/<uuid>")
 def read(uuid: str):
     p = ReadsAPI.read(uuid)
+    if not p:
+        abort(404)
+
+    p["content"] = markdown(p["content"], extensions=["fenced_code", "tables"])
     return render_template("baca.html", article=p)
