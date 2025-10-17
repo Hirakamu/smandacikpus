@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — SMAN 2 Cikpus{% endblock %}
+
+{% block content %}
+<div class="py-4">
+  <h3 class="mb-4">Admin Dashboard</h3>
+
+  <div class="row g-3">
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body text-center">
+          <h6 class="text-muted">Articles</h6>
+          <h3 class="fw-bold"></h3>
+          <a href="" class="btn btn-sm btn-outline-primary mt-2">Manage</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body text-center">
+          <h6 class="text-muted">Users</h6>
+          <h3 class="fw-bold"></h3>
+          <a href="" class="btn btn-sm btn-outline-primary mt-2">Manage</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body text-center">
+          <h6 class="text-muted">Comments</h6>
+          <h3 class="fw-bold"></h3>
+          <a href="" class="btn btn-sm btn-outline-primary mt-2">Manage</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body text-center">
+          <h6 class="text-muted">Settings</h6>
+          <h3 class="fw-bold"><i class="bi bi-gear"></i></h3>
+          <a href="" class="btn btn-sm btn-outline-primary mt-2">Configure</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5">
+    <h5>Recent Articles</h5>
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in recent_articles %}
+        <tr>
+          <td>{{ a.title }}</td>
+          <td>{{ a.author }}</td>
+          <td>{{ a.date }}</td>
+          <td>
+            <span class="badge {% if a.published %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ 'Published' if a.published else 'Draft' }}
+            </span>
+          </td>
+          <td class="text-end">
+            <a href="" class="btn btn-sm btn-outline-primary">Edit</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">No recent articles</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

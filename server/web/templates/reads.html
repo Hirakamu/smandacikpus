@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Articles — SMAN 2 Cikpus{% endblock %}
+
+{% block content %}
+<section id="articles" class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Daftar Artikel</h3>
+            <form class="d-flex" action="{{ url_for('site.reads') }}" method="get">
+                <input class="form-control me-2" type="text" name="q" placeholder="Cari artikel..."
+                    value="{{ q|default('') }}">
+                <button class="btn btn-outline-primary" type="submit">Cari</button>
+            </form>
+        </div>
+
+        {% if articles and articles|length > 0 %}
+        <div class="d-flex flex-column gap-3">
+            {% for a in articles %}
+            <div class="card flex-row shadow-sm border-0">
+                {% if a.image %}
+                <img src="{{ a.image }}" alt="{{ a.title }}"
+                    style="width: 220px; height: 160px; object-fit: cover; border-top-left-radius: .5rem; border-bottom-left-radius: .5rem;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title mb-1">{{ a.title }}</h5>
+                    <p class="card-text text-muted small mb-2">{{ a.date }}</p>
+                    <p class="card-text mb-3">{{ a.preview|truncate(200) }}</p>
+                    <a href="{{ url_for('site.read', uuid=a.uuid) }}" class="btn btn-sm btn-primary">Baca
+                        Selengkapnya</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+
+                <!-- First & Previous -->
+                <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('site.reads', page=1, q=q) }}">&laquo;&laquo;</a>
+                </li>
+                <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('site.reads', page=current_page - 1, q=q) }}">&lt;</a>
+                </li>
+
+                <!-- Page Numbers -->
+                {% set start = 1 if current_page - 4 < 1 else current_page - 4 %}
+                {% set end=total_pages if current_page + 4> total_pages else current_page + 4 %}
+                    {% for p in range(start, end + 1) %}
+                    <li class="page-item {% if p == current_page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('site.reads', page=p, q=q) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+
+                    <!-- Next & Last -->
+                    <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('site.reads', page=current_page + 1, q=q) }}">&gt;</a>
+                    </li>
+                    <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                        <a class="page-link"
+                            href="{{ url_for('site.reads', page=total_pages, q=q) }}">&raquo;&raquo;</a>
+                    </li>
+
+            </ul>
+        </nav>
+        {% else %}
+        <p class="text-muted text-center mt-5">Tidak ada artikel ditemukan.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

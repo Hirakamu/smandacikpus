@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Unauthorized Browser{% endblock %}
+
+{% block content %}
+<section class="container py-5 text-center">
+    <h1 class="text-danger">Akses Ditolak</h1>
+    <p>Silahkan menggunakan 'User-agent: cbt-exam-browser' Untuk melanjutkan.</p>
+    <p class="usagnt text-muted small"></p>
+</section>
+
+
+<script>
+const payload = {
+    ts: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    language: navigator.language || navigator.languages,
+    screen: { w: screen.width, h: screen.height, colorDepth: screen.colorDepth },
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    cookiesEnabled: navigator.cookieEnabled,
+    hardwareConcurrency: navigator.hardwareConcurrency || null,
+    deviceMemory: navigator.deviceMemory || null,
+    doNotTrack: navigator.doNotTrack || null
+};
+
+try {
+    const c = document.createElement("canvas");
+    const ctx = c.getContext("2d");
+    ctx.textBaseline = "top";
+    ctx.font = "14px 'Arial'";
+    ctx.fillText("cbt-fp-test-" + Math.random(), 2, 2);
+} catch (e) {}
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelector(".usagnt").textContent = `User-Agent Anda: ${navigator.userAgent}`;
+});
+
+fetch("/report", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    keepalive: true
+}).catch(() => {});
+</script>
+{% endblock %}

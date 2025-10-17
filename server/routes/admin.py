@@ -18,8 +18,9 @@ import uuid
 import os
 import html
 from config import DB_FILE, PAGEDIR, ADMIN_REGISTER_TOKEN, SESSION_LIFETIME_DAYS
-from dbapi import TeacherAPI
 
 bp = Blueprint("admin", __name__)
 
-# future
+@bp.route('/admin')
+def adminPage():
+    return render_template('admin.html')

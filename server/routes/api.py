@@ -8,11 +8,11 @@ register_error_handlers(bp)
 def error(code: int, message: str): # complete
     return render_template('error.html', code=code, message=message), code
 
-@bp.route('/api/page/import') # complete
+@bp.route('/api/page/import') # unused
 def readsImport():
     res = ReadsAPI.importFromDir()
     return jsonify({"status": f"{res}"})
 
-@bp.route('/api/ping')
+@bp.route('/api/ping') # complete
 def ping():
     return jsonify({"status": 200, "description": "received"})

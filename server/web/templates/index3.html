@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Beranda — SMAN 2 Cikpus{% endblock %}
+
+{% block head_extra %}
+<!-- small extra styles for mosaic and FAB -->
+<style>
+  .mosaic-img { object-fit: cover; height: 220px; width:100%; }
+  .hero { height: 420px; background-size: cover; background-position: center; position:relative; }
+  .hero-overlay { position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.6)); display:flex; align-items:flex-end; padding:2rem; color:#fff; }
+  .chip { display:inline-block; padding:.35rem .7rem; border-radius:999px; background:#f1f3f5; margin:.15rem; cursor:pointer; }
+  .fab { position:fixed; right:1rem; bottom:1.2rem; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,.15); }
+  @media (max-width:767px){ .hero { height:280px } .mosaic-img{ height:160px } }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="mb-4">
+  <div class="hero rounded-3" style="background-image:url('{{ hero.image }}')">
+    <div class="hero-overlay rounded-3">
+      <div>
+        <div class="text-uppercase small text-muted mb-1">{{ hero.category }}</div>
+        <h1 class="display-6 fw-bold">{{ hero.title }}</h1>
+        <p class="mb-2">{{ hero.lead }}</p>
+        <a href="{{ url_for('site.read', uuid=hero.uuid) }}" class="btn btn-light btn-sm">Baca Selengkapnya</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TAG FILTER + SIDEBAR -->
+<div class="d-flex gap-3 mb-3">
+  <div class="flex-grow-1">
+    <div class="mb-2">
+      {% for tag in tags %}
+      <span class="chip" onclick="location.href='{{ url_for('site.tag', name=tag) }}'">{{ tag }}</span>
+      {% endfor %}
+    </div>
+
+    <!-- MOSAIC GRID -->
+    <div class="row g-3">
+      {% for item in mosaic %}
+        {% if loop.index == 1 %}
+        <div class="col-lg-6">
+          <div class="card h-100 border-0">
+            <img src="{{ item.image }}" class="mosaic-img rounded-3" alt="{{ item.title }}">
+            <div class="card-body">
+              <h4><a href="{{ url_for('site.read', uuid=item.uuid) }}" class="text-dark text-decoration-none">{{ item.title }}</a></h4>
+              <p class="small text-muted">{{ item.date }} • {{ item.author }}</p>
+              <p class="mb-0">{{ item.summary }}</p>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100 border-0">
+            <img src="{{ item.image }}" class="mosaic-img rounded-3" alt="{{ item.title }}">
+            <div class="card-body">
+              <h6 class="mb-1"><a href="{{ url_for('site.read', uuid=item.uuid) }}" class="text-dark text-decoration-none">{{ item.title }}</a></h6>
+              <div class="small text-muted">{{ item.date }}</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      {% else %}
+      <div class="col-12 text-muted">Tidak ada konten.</div>
+      {% endfor %}
+    </div>
+
+    <!-- EDITOR'S PICKS (horizontal scroller) -->
+    <div class="mt-4">
+      <h5 class="mb-3">Pilihan Editor</h5>
+      <div class="d-flex overflow-auto gap-3 pb-2">
+        {% for pick in picks %}
+        <div class="card" style="min-width:220px;">
+          <img src="{{ pick.image }}" class="mosaic-img rounded-top" alt="{{ pick.title }}">
+          <div class="card-body">
+            <h6 class="mb-1"><a href="{{ url_for('site.read', uuid=pick.uuid) }}" class="text-dark text-decoration-none">{{ pick.title }}</a></h6>
+            <div class="small text-muted">{{ pick.date }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <aside style="width:320px;">
+    <div class="position-sticky" style="top:92px;">
+      <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+          <h6 class="mb-2">Terbaru</h6>
+          <ul class="list-unstyled mb-0">
+            {% for s in micro_feed %}
+            <li class="d-flex mb-2">
+              <img src="{{ s.thumb }}" width="64" height="44" class="rounded me-2 object-fit-cover" alt="">
+              <div>
+                <a href="{{ url_for('site.read', uuid=s.uuid) }}" class="text-dark text-decoration-none small">{{ s.title }}</a>
+                <div class="small text-muted">{{ s.date }}</div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+          <h6 class="mb-2">Newsletter</h6>
+          <p class="small text-muted">Dapatkan ringkasan mingguan.</p>
+          <form method="post" action="">
+            <div class="input-group">
+              <input name="email" type="email" class="form-control form-control-sm" placeholder="email@contoh.com" required>
+              <button class="btn btn-primary btn-sm" type="submit">Daftar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body small text-muted">
+          <h6 class="mb-2">Kategori Populer</h6>
+          <ul class="list-unstyled mb-0">
+            {% for c in popular_categories %}
+            <li><a href="{{ url_for('site.category', name=c.slug) }}" class="text-decoration-none">{{ c.name }} <span class="text-muted small">({{ c.count }})</span></a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- FLOATING ACTION BUTTON -->
+<a href="{{ url_for('site.home') }}" class="btn btn-primary fab" title="Kirim Berita">
+  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5V7.5H11.5a.5.5 0 0 1 0 1H8.5V11.5a.5.5 0 0 1-1 0V8.5H4.5a.5.5 0 0 1 0-1H7.5V4.5A.5.5 0 0 1 8 4z"/></svg>
+</a>
+{% endblock %}

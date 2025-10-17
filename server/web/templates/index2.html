@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Beranda — SMAN 2 Cikpus{% endblock %}
+
+{% block content %}
+<section id="headline" class="mb-4">
+  <div class="card border-0 shadow-sm">
+    <img src="" class="card-img-top" alt="">
+    <div class="card-body">
+      <h2 class="card-title"></h2>
+      <p class="card-text text-muted"></p>
+      <a href="" class="btn btn-primary btn-sm">Baca Selengkapnya</a>
+    </div>
+  </div>
+</section>
+
+<section id="liputan" class="mb-5">
+  <h4 class="border-bottom pb-2 mb-3">Liputan Khusus</h4>
+  <div class="row g-3">
+    {% for a in liputan %}
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border-0">
+        <img src="" class="card-img-top" alt="">
+        <div class="card-body">
+          <h5 class="card-title"><a href="" class="text-dark text-decoration-none"></a></h5>
+          <p class="text-muted small mb-2"></p>
+          <p class="card-text"></p>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted">Belum ada liputan khusus.</p>
+    {% endfor %}
+  </div>
+  <div class="text-center mt-3">
+    <a href="" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
+  </div>
+</section>
+
+<section id="artikel" class="mb-5">
+  <h4 class="border-bottom pb-2 mb-3">Artikel</h4>
+  <div class="row g-3">
+    {% for a in articles %}
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border-0">
+        <img src="" class="card-img-top" alt="">
+        <div class="card-body">
+          <h5 class="card-title"><a href="" class="text-dark text-decoration-none"></a></h5>
+          <p class="text-muted small mb-2"></p>
+          <p class="card-text"></p>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted">Belum ada artikel.</p>
+    {% endfor %}
+  </div>
+  <div class="text-center mt-3">
+    <a href="" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
+  </div>
+</section>
+
+<section id="tokoh" class="mb-5">
+  <h4 class="border-bottom pb-2 mb-3">Tokoh</h4>
+  <div class="row g-3">
+    {% for t in tokoh %}
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border-0">
+        <img src="" class="card-img-top" alt="">
+        <div class="card-body">
+          <h5 class="card-title"><a href="" class="text-dark text-decoration-none"></a></h5>
+          <p class="text-muted small mb-2"></p>
+          <p class="card-text"></p>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted">Belum ada tokoh.</p>
+    {% endfor %}
+  </div>
+  <div class="text-center mt-3">
+    <a href="" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
+  </div>
+</section>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <section id="berita-regional">
+      <h4 class="border-bottom pb-2 mb-3">Berita Regional</h4>
+      <ul class="list-unstyled">
+        {% for b in regional %}
+        <li class="mb-2">
+          <a href="" class="text-dark text-decoration-none"></a>
+          <div class="small text-muted"></div>
+        </li>
+        {% else %}
+        <p class="text-muted">Belum ada berita regional.</p>
+        {% endfor %}
+      </ul>
+      <a href="" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
+    </section>
+  </div>
+
+  <div class="col-md-6">
+    <section id="berita-nasional">
+      <h4 class="border-bottom pb-2 mb-3">Berita Nasional</h4>
+      <ul class="list-unstyled">
+        {% for b in nasional %}
+        <li class="mb-2">
+          <a href="" class="text-dark text-decoration-none"></a>
+          <div class="small text-muted"></div>
+        </li>
+        {% else %}
+        <p class="text-muted">Belum ada berita nasional.</p>
+        {% endfor %}
+      </ul>
+      <a href="" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
+    </section>
+  </div>
+</div>
+{% endblock %}

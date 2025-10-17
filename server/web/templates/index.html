@@ -240,7 +240,7 @@
   <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="mb-0">Artikel</h3>
-      <a href="" class="btn btn-sm btn-outline-primary">More like this</a>
+      <a href="{{ url_for('site.reads') }}" class="btn btn-sm btn-outline-primary">More like this</a>
     </div>
 
     {% if articles and articles|length > 0 %}
