@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS reads (
     creator TEXT,
     created TEXT,
     type TEXT,
-    preview TEXT
+    preview TEXT,
+    path TEXT NOT NULL
 );
 """
 
@@ -135,6 +136,9 @@ class ReadsAPI:
                             k, v = line.split(":", 1)
                             meta[k.strip()] = v.strip()
 
+                # Sync author field if present in front-matter
+                meta["creator"] = meta.get("author", meta["creator"])
+
                 preview = text_snippet(body, PREVIEWWORD)
 
                 conn.execute(
@@ -156,24 +160,28 @@ class ReadsAPI:
     @lru_cache(maxsize=512)
     def read(uuid: str) -> Optional[Dict[str, Any]]:
         with DButils.connection() as conn:
-            cursor = conn.execute("SELECT * FROM reads WHERE uuid = ?", [uuid])
+            # Normalize UUID to handle both dashed and non-dashed formats
+            normalized_uuid = f"{uuid[0:8]}-{uuid[8:12]}-{uuid[12:16]}-{uuid[16:20]}-{uuid[20:32]}"
+            cursor = conn.execute("SELECT * FROM reads WHERE uuid = ?", [normalized_uuid])
             row = cursor.fetchone()
             if not row:
                 return None
             row = dict(row)
             created_iso = row["created"].replace("'", "")
-            md_path = (Path(PAGEDIR)/datetime.fromisoformat(created_iso).strftime("%Y/%m/%d")/f"{uuid}.md")
+
+            md_path = Path(PAGEDIR) / datetime.fromisoformat(created_iso).strftime("%Y/%m/%d") / f"{normalized_uuid}.md"
 
             if md_path.exists():
                 text = md_path.read_text(encoding="utf-8")
-                # strip YAML front-matter
-                m = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.DOTALL)
-                if m:
-                    _, content = m.groups()
-                else:
-                    content = text.strip()
             else:
-                content = row["preview"]
+                text = row["preview"]
+
+            # Strip YAML front-matter
+            m = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.DOTALL)
+            if m:
+                _, content = m.groups()
+            else:
+                content = text.strip()
 
             del row["preview"]
 

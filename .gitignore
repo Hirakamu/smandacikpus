@@ -18,6 +18,7 @@ tools/paidscrapper.py
 
 # development output folder
 devdata/
+data/
 
 # garbage going around
 *.json

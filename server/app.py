@@ -12,9 +12,8 @@ from sqlite3 import Connection as sqlite
 def create_app():
     os.makedirs(USERDATA, exist_ok=True)
     app = Flask(__name__, static_folder=str(ROOT / 'web/static'), template_folder=str(ROOT / 'web/templates'))
-    app.config['JSON_SORT_KEYS'] = False
-    app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
     app.permanent_session_lifetime = timedelta(days=SESSION_LIFETIME_DAYS)
+    app.secret_key = "your-unique-secret-key"  # Set a unique and secret key for session management
 
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_bp)
@@ -24,5 +23,6 @@ def create_app():
     
     app.teardown_appcontext(lambda e: DButils.close())  # auto close after request
     DButils.init_db()  # initialize once
+    DButils.syncAll()
 
     return app
