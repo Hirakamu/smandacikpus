@@ -39,7 +39,7 @@ import sqlite3
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Tuple
 from datetime import datetime
-from config import PAGEDIR
+from config import PAGEDIR, USERDATA, PREVIEWWORD
 
 # --------------------------- utils -----------------------------------------
 
@@ -59,41 +59,73 @@ def zero_pad(n: int, width: int = 3) -> str:
 # --------------------------- path helpers ----------------------------------
 
 BASE_ROOT = Path(PAGEDIR)
+DB_FILE = USERDATA / "pages.db"
 
 def page_dir_for(uuid_: str) -> Path:
     prefix = uuid_[:2]
-    return Path("data/pages") / prefix / uuid_
+    return Path(BASE_ROOT) / prefix / uuid_
 
 # --------------------------- metadata helpers ------------------------------
 
 def _meta_path(page_dir: Path) -> Path:
     return page_dir / "meta.json"
 
+def _read_file_content(file_path: Path) -> str:
+    """
+    Helper function to read the content of a file.
+
+    Args:
+        file_path (Path): Path to the file.
+
+    Returns:
+        str: Content of the file.
+    """
+    return file_path.read_text(encoding="utf-8")
+
 def load_meta(page_dir: Path) -> Dict[str, Any]:
+    """
+    Load metadata from the meta.json file in the page directory.
+
+    Args:
+        page_dir (Path): Path to the page directory.
+
+    Returns:
+        Dict[str, Any]: Metadata dictionary.
+    """
     p = _meta_path(page_dir)
     if not p.exists():
         return {}
     try:
-        return json.loads(p.read_text(encoding="utf-8"))
-    except Exception:
+        return json.loads(_read_file_content(p))
+    except json.JSONDecodeError:
         return {}
 
 def save_meta(page_dir: Path, meta: Dict[str, Any]) -> None:
+    """
+    Save metadata to the meta.json file in the page directory.
+
+    Args:
+        page_dir (Path): Path to the page directory.
+        meta (Dict[str, Any]): Metadata dictionary to save.
+    """
     ensure_dir(page_dir)
     _meta_path(page_dir).write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
 # --------------------------- core ops --------------------------------------
 
 def _next_diff_index(diffs_dir: Path) -> int:
+    """
+    Get the next available diff index in the diffs directory.
+
+    Args:
+        diffs_dir (Path): Path to the diffs directory.
+
+    Returns:
+        int: Next available diff index.
+    """
     if not diffs_dir.exists():
         return 1
-    nums: List[int] = []
-    for p in diffs_dir.iterdir():
-        if p.is_file() and p.suffix == ".diff":
-            try:
-                nums.append(int(p.stem))
-            except Exception:
-                pass
+    nums = [int(p.stem) for p in diffs_dir.iterdir() if p.is_file() and p.suffix == ".diff" and p.stem.isdigit()]
     return (max(nums) + 1) if nums else 1
 
 def _sorted_diff_files(diffs_dir: Path) -> List[Path]:
@@ -101,11 +133,71 @@ def _sorted_diff_files(diffs_dir: Path) -> List[Path]:
     return sorted(files, key=lambda p: int(p.stem))
 
 def apply_diffs_to_text(base_text: str, diff_file_paths: List[Path]) -> str:
+    """
+    Apply a series of diffs to the base text to reconstruct the latest text.
+
+    Args:
+        base_text (str): The base text content.
+        diff_file_paths (List[Path]): List of diff file paths.
+
+    Returns:
+        str: The reconstructed text after applying diffs.
+    """
     text_lines = base_text.splitlines(keepends=False)
     for diff_path in diff_file_paths:
-        diff_text = diff_path.read_text(encoding="utf-8").splitlines(keepends=False)
-        text_lines = list(difflib.restore(diff_text, 2))  # reconstruct new
+        diff_text = _read_file_content(diff_path).splitlines(keepends=False)
+        text_lines = list(difflib.restore(diff_text, 2))
     return "\n".join(text_lines) + ("\n" if text_lines else "")
+
+# Optimization: Refactored repeated function calls into reusable helper functions.
+
+def _get_or_create_diffs_dir(page_dir: Path) -> Path:
+    """
+    Ensure the diffs directory exists and return its path.
+
+    Args:
+        page_dir (Path): Path to the page directory.
+
+    Returns:
+        Path: Path to the diffs directory.
+    """
+    diffs_dir = page_dir / "diffs"
+    ensure_dir(diffs_dir)
+    return diffs_dir
+
+def _get_base_and_latest_paths(page_dir: Path) -> Tuple[Path, Path]:
+    """
+    Get the paths for base.md and latest.md files in the page directory.
+
+    Args:
+        page_dir (Path): Path to the page directory.
+
+    Returns:
+        Tuple[Path, Path]: Paths to base.md and latest.md files.
+    """
+    return page_dir / "base.md", page_dir / "latest.md"
+
+# Optimization: Refactored database schema creation into a reusable function.
+
+def _ensure_pages_index_table(cursor: sqlite3.Cursor) -> None:
+    """
+    Ensure the pages_index table exists with the correct schema.
+
+    Args:
+        cursor (sqlite3.Cursor): SQLite cursor to execute the schema creation.
+    """
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS pages_index (
+            UUID TEXT NOT NULL PRIMARY KEY,
+            GENRE TEXT NOT NULL,
+            AUTHOR TEXT NOT NULL,
+            DATE_CREATED TEXT NOT NULL,
+            PREVIEW TEXT NOT NULL,
+            PREFIX TEXT NOT NULL
+        )
+        """
+    )
 
 # --------------------------- public API ------------------------------------
 
@@ -143,10 +235,8 @@ def commit_diff(id_: str, new_text: str, author: str, message: str) -> str:
     if not page_dir.exists():
         raise FileNotFoundError("page not found; run init_page first")
 
-    base_path = page_dir / "base.md"
-    latest_path = page_dir / "latest.md"
-    diffs_dir = page_dir / "diffs"
-    ensure_dir(diffs_dir)
+    base_path, latest_path = _get_base_and_latest_paths(page_dir)
+    diffs_dir = _get_or_create_diffs_dir(page_dir)
 
     old_text = latest_path.read_text(encoding="utf-8") if latest_path.exists() else base_path.read_text(encoding="utf-8")
     old_lines = old_text.splitlines(keepends=False)
@@ -188,9 +278,8 @@ def rebuild_latest(id_: str) -> Path:
     if not page_dir.exists():
         raise FileNotFoundError("page not found")
 
-    base_path = page_dir / "base.md"
-    latest_path = page_dir / "latest.md"
-    diffs_dir = page_dir / "diffs"
+    base_path, latest_path = _get_base_and_latest_paths(page_dir)
+    diffs_dir = _get_or_create_diffs_dir(page_dir)
     base_text = base_path.read_text(encoding="utf-8")
     diff_files = _sorted_diff_files(diffs_dir) if diffs_dir.exists() else []
     new_text = apply_diffs_to_text(base_text, diff_files)
@@ -232,111 +321,249 @@ def list_diffs(id_: str) -> List[Tuple[str, Dict[str, Any]]]:
         out.append((p.name, meta))
     return out
 
-def index_pages(base_dir: Path) -> List[Dict[str, Any]]:
+def indexToDB(folder_path: Path):
     """
-    Index all pages by UUID, folder path, and metadata.
+    Recursively scan a folder for UUIDs and index the data into the database.
 
     Args:
-        base_dir (Path): The base directory to start indexing from.
+        folder_path (Path): The root folder to scan for UUIDs.
+    """
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+
+    # Ensure the table exists
+    _ensure_pages_index_table(cursor)
+
+    total = 0
+    # Scan only the first-level subdirectories (prefix folders)
+    try:
+        for prefix_folder in os.listdir(folder_path):
+            prefix_path = os.path.join(folder_path, prefix_folder)
+
+            if os.path.isdir(prefix_path):
+
+                for uuid_folder in os.listdir(prefix_path):
+
+                    uuid_path = os.path.join(prefix_path, uuid_folder)
+
+                    if os.path.isdir(uuid_path):
+
+                        meta_path = os.path.join(uuid_path, "meta.json")
+                        contents = os.path.join(uuid_path, "latest.md")
+
+                        if os.path.exists(meta_path) and os.path.exists(contents):
+
+                            with open(contents, "r", encoding="utf-8") as f:
+                                content_text = f.read()
+                                words = content_text.split()
+                                preview = " ".join(words[:PREVIEWWORD])
+
+                            with open(meta_path, "r", encoding="utf-8") as f:
+                                meta = json.load(f)
+                                uuid = meta.get("uuid", "")
+                                genre = meta.get("genre", "")
+                                author = meta.get("author", "")
+                                date_created = meta.get("createdAt", "")
+                                prefix = prefix_folder
+
+                            # Insert the data into the table
+                            cursor.execute(
+                                """
+                                INSERT INTO pages_index (UUID, GENRE, AUTHOR, DATE_CREATED, PREVIEW, PREFIX)
+                                VALUES (?, ?, ?, ?, ?, ?)
+                                ON CONFLICT(UUID) DO UPDATE SET
+                                    GENRE = excluded.GENRE,
+                                    AUTHOR = excluded.AUTHOR,
+                                    DATE_CREATED = excluded.DATE_CREATED,
+                                    PREVIEW = excluded.PREVIEW,
+                                    PREFIX = excluded.PREFIX
+                                """,
+                                (uuid, genre, author, date_created, preview, prefix)
+                            )
+                            total += 1
+        conn.commit()
+        conn.close()
+        print(f"Indexed {total} page(s) in folder: {folder_path}")
+
+    except Exception as e:
+        print(f"Error during indexing: {e}")
+
+def insertPage(page_path: Path) -> bool:
+    """
+    Insert a single page directory (containing `meta.json`) into the pages_index database.
+
+    Args:
+        page_path (Path): Path to the page folder (the UUID directory).
 
     Returns:
-        List[Dict[str, Any]]: A list of dictionaries containing UUID, folder path, and metadata.
-    """
-    index = []
-
-    for root, dirs, files in os.walk(base_dir):
-        # Check if the folder contains a meta.json file
-        if "meta.json" in files:
-            meta_path = Path(root) / "meta.json"
-            try:
-                # Load metadata
-                meta = json.loads(meta_path.read_text(encoding="utf-8"))
-                uuid = meta.get("uuid")
-                if uuid:
-                    index.append({
-                        "uuid": uuid,
-                        "folder": str(Path(root).relative_to(base_dir)),
-                        "meta": meta
-                    })
-            except Exception as e:
-                print(f"Error reading meta.json in {root}: {e}")
-
-    return index
-
-def save_index(index: List[Dict[str, Any]], output_path: Path) -> None:
-    """
-    Save the index to a JSON file.
-
-    Args:
-        index (List[Dict[str, Any]]): The index data to save.
-        output_path (Path): The path to the output JSON file.
+        bool: True if insertion succeeded or the record already existed, False on error or missing meta.json.
     """
     try:
-        output_path.write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8")
-        print(f"Index saved to {output_path}")
-    except Exception as e:
-        print(f"Error saving index to {output_path}: {e}")
+        # Ensure DB folder exists
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
 
-def setup_database(db_path: Path) -> None:
+        # Ensure the table exists with the correct schema
+        _ensure_pages_index_table(cursor)
+
+        meta_path = page_path / "meta.json"
+        if not meta_path.exists():
+            # nothing to insert
+            conn.close()
+            return False
+
+        with meta_path.open("r", encoding="utf-8") as f:
+            meta = json.load(f)
+
+        contents = page_path / "latest.md"
+        if not contents.exists():
+            conn.close()
+            return False
+
+        with contents.open("r", encoding="utf8") as d:
+            content_text = d.read()
+            words = content_text.split()
+            preview = " ".join(words[:PREVIEWWORD])
+
+        uuid = meta.get("uuid", "")
+        genre = meta.get("genre", "")
+        author = meta.get("author", "")
+        date_created = meta.get("createdAt", "")
+        prefix = page_path.parent.name
+
+        cursor.execute(
+            """
+            INSERT INTO pages_index (UUID, GENRE, AUTHOR, DATE_CREATED, PREVIEW, PREFIX)
+            SELECT ?, ?, ?, ?, ?, ?
+            WHERE NOT EXISTS (
+                SELECT 1 FROM pages_index WHERE UUID = ?
+            )
+            """,
+            (uuid, genre, author, date_created, preview, prefix, uuid),
+        )
+
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error inserting page {page_path}: {e}")
+        return False
+
+def search_uuid_in_path(uuid: str, folder_path: Path) -> Optional[Dict[str, Any]]:
     """
-    Set up the database schema for indexing pages.
+    Search for a UUID in the specified path and retrieve its metadata from the database.
 
     Args:
-        db_path (Path): The path to the SQLite database file.
+        uuid (str): The UUID to search for.
+        folder_path (Path): The path to search within.
+
+    Returns:
+        Optional[Dict[str, Any]]: Metadata for the UUID if found, otherwise None.
     """
-    conn = sqlite3.connect(db_path)
+    # Ensure the database file exists
+    if not DB_FILE.exists():
+        print("Database file not found.")
+        return None
+
+    # Check if the UUID exists in the specified path
+    uuid_path = folder_path / uuid[:2] / uuid
+    meta_path = uuid_path / "meta.json"
+    if not meta_path.exists():
+        return None
+
+    # Query the database for the UUID
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS page_index (
-            uuid TEXT PRIMARY KEY,
-            folder TEXT NOT NULL,
-            metadata TEXT NOT NULL
-        )
-        """
+        SELECT UUID, GENRE, AUTHOR, DATE_CREATED, PREVIEW, PREFIX
+        FROM pages_index
+        WHERE UUID = ?
+        """,
+        (uuid,)
     )
-    conn.commit()
+    result = cursor.fetchone()
     conn.close()
 
-def index_pages_to_db(base_dir: Path, db_path: Path) -> None:
+    if result:
+        metadata = {
+            "UUID": result[0],
+            "Genre": result[1],
+            "Author": result[2],
+            "Date Created": result[3],
+            "Preview": result[4],
+            "Prefix": result[5],
+        }
+        return metadata
+    return None
+
+def get_latest_text(id_: str) -> str:
     """
-    Index all pages by UUID, folder path, and metadata into a database.
+    Retrieve the latest text content of a page by its UUID.
 
     Args:
-        base_dir (Path): The base directory to start indexing from.
-        db_path (Path): The path to the SQLite database file.
+        id_ (str): The UUID of the page.
+
+    Returns:
+        str: The latest text content of the page.
     """
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+    page_dir = page_dir_for(id_)
+    latest_path = page_dir / "latest.md"
 
-    for root, dirs, files in os.walk(base_dir):
-        # Check if the folder contains a meta.json file
-        if "meta.json" in files:
-            meta_path = Path(root) / "meta.json"
-            try:
-                # Load metadata
-                meta = json.loads(meta_path.read_text(encoding="utf-8"))
-                uuid = meta.get("uuid")
-                if uuid:
-                    folder = str(Path(root).relative_to(base_dir))
-                    metadata = json.dumps(meta, ensure_ascii=False)
-                    cursor.execute(
-                        """
-                        INSERT OR REPLACE INTO page_index (uuid, folder, metadata)
-                        VALUES (?, ?, ?)
-                        """,
-                        (uuid, folder, metadata)
-                    )
-            except Exception as e:
-                print(f"Error reading meta.json in {root}: {e}")
+    if not latest_path.exists():
+        raise FileNotFoundError("Latest version not found; ensure the page is initialized and rebuilt.")
 
-    conn.commit()
-    conn.close()
+    return latest_path.read_text(encoding="utf-8")
+
+def listPage(offset: int = 0, limit: int = 10, query: str = "") -> Dict[str, Any]:
+    """
+    Fetch a paginated list of pages from the database using preview data only.
+
+    Args:
+        offset (int): The starting point for pagination.
+        limit (int): The maximum number of items to fetch.
+        query (str): A search query to filter results by title or creator.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the list of items and the total count.
+    """
+    where = ""
+    params_select: List[Any] = []
+    params_count: List[Any] = []
+
+    if query:
+        where = " WHERE title LIKE ? OR author LIKE ?"
+        qparam = f"%{query}%"
+        params_select.extend([qparam, qparam])
+        params_count.extend([qparam, qparam])
+
+    sql_count = f"SELECT COUNT(*) FROM pages_index{where}"
+    sql = f"SELECT UUID, GENRE, AUTHOR, DATE_CREATED, PREVIEW FROM pages_index{where} ORDER BY DATE_CREATED DESC LIMIT ? OFFSET ?"
+
+    conn = sqlite3.connect(DB_FILE)
+    try:
+        cursor = conn.execute(sql_count, params_count)
+        total = cursor.fetchone()[0]
+
+        params = list(params_select) + [limit, offset]
+        cursor = conn.execute(sql, params)
+        rows = cursor.fetchall()
+
+        # Convert rows to dictionaries using column names
+        column_names = [description[0] for description in cursor.description]
+        items = [dict(zip(column_names, row)) for row in rows]
+
+        return {
+            "items": items,
+            "total": total
+        }
+    finally:
+        conn.close()
 
 # --------------------------- CLI -------------------------------------------
 
 def _make_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Manage markdown versions with hybrid diffs + rolling latest + canonical writes.")
+    p = argparse.ArgumentParser(description="Manage markdown versions with hybrid diffs + rolling latest.")
     sub = p.add_subparsers(dest="cmd")
 
     p_init = sub.add_parser("init", help="initialize a page")
@@ -361,7 +588,16 @@ def _make_parser() -> argparse.ArgumentParser:
 
     p_list = sub.add_parser("list-diffs", help="list diffs for a page")
     p_list.add_argument("uuid", help="page uuid")
+    
+    p_index = sub.add_parser("index", help="index pages into the database")
+    p_index.add_argument("folder", nargs="?", default="data/pages", help="folder path to index")
+    
+    p_delete = sub.add_parser("delete", help="delete a page")
+    p_delete.description = "Delete command cannot be used in this operation, please use the appropriate method."
 
+    p_search = sub.add_parser("search", help="search for a uuid in the database")
+    p_search.add_argument("uuid", help="page uuid")
+    
     return p
 
 def _read_text_file(path_str: str) -> str:
@@ -387,8 +623,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
 
     if args.cmd == "view":
-        txt = view_version(id_=args.uuid, index=args.index)
-        print(txt, end="")
+        txt = get_latest_text(id_=args.uuid)
+        print(txt)
         return 0
 
     if args.cmd == "rebuild":
@@ -400,19 +636,30 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(name, json.dumps(meta, ensure_ascii=False))
         return 0
 
+    if args.cmd == "delete":
+        print("Delete command cannot be used in this operation, please use the appropriate method.")
+        return 1
+    
+    if args.cmd == "index":
+        os.makedirs(BASE_ROOT, exist_ok=True)
+        indexToDB(BASE_ROOT)
+        return 0
+    
+    if args.cmd == "search":
+        folder_path = Path(BASE_ROOT)
+        metadata = search_uuid_in_path(args.uuid, folder_path)
+        if metadata:
+            print("Metadata found:")
+            for key, value in metadata.items():
+                print(f"{key}: {value}")
+            return 0
+        else:
+            print("UUID not found.")
+            return 1
+
     p.print_help()
     return 1
 
 # Example usage for indexing
 if __name__ == "__main__":
-    base_dir = BASE_ROOT / "data/pages"
-    output_path = BASE_ROOT / "index.json"
-    db_path = BASE_ROOT / "index.db"
-
-    index = index_pages(base_dir)
-    save_index(index, output_path)
-
-    setup_database(db_path)
-    index_pages_to_db(base_dir, db_path)
-
     raise SystemExit(main())

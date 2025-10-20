@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, abort, render_template_st
 from dbapi import ReadsAPI
 from markdown import markdown
 from functools import lru_cache
-import datetime, json, csv, smtplib
+import datacontroller as datac
 
 bp = Blueprint("site", __name__)
 
@@ -12,7 +12,7 @@ def home():
     page = max(1, int(request.args.get('page',1)))
     limit = 10
     offset = (page - 1) * limit
-    data = ReadsAPI.pageList(offset,limit,q)
+    data = datac.listPage(offset,limit,q)
     items = data.get("items", [])
     
     for a in items:

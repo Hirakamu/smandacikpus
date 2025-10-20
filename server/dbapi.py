@@ -141,13 +141,16 @@ class ReadsAPI:
 
                 preview = text_snippet(body, PREVIEWWORD)
 
+                # Ensure path is included in the INSERT statement
+                path = meta.get("path", "")  # Default to an empty string if path is not provided
+
                 conn.execute(
                     """
                     INSERT OR REPLACE INTO reads
-                    (uuid, title, creator, created, type, preview)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    (uuid, title, creator, created, type, preview, path)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     """,
-                    [meta["uuid"], meta["title"], meta["creator"], meta["date"], meta["type"], preview],
+                    [meta["uuid"], meta["title"], meta["creator"], meta["date"], meta["type"], preview, path],
                 )
             conn.commit()
             print(f"Imported: {conn.total_changes}")
