@@ -24,179 +24,33 @@ CREATE TABLE IF NOT EXISTS reads (
 
 class DButils:
     @staticmethod
-    def connect() -> sqlite3.Connection:
+    @contextmanager
+    def connect():
         """Per-request SQLite connection using flask.g (kept for request-scoped usage)."""
-        if not hasattr(flask_g, "_db") or flask_g._db is None:
+        if not flask_g.get("_db") or flask_g._db is None:
             conn = sqlite3.connect(DB_FILE, detect_types=sqlite3.PARSE_DECLTYPES, timeout=30)
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA foreign_keys = ON")
             conn.execute("PRAGMA journal_mode = WAL")
             conn.execute("PRAGMA synchronous = NORMAL")
             flask_g._db = conn
-        return flask_g._db
+        try:
+            yield flask_g._db
+        finally:
+            DButils.close()
 
     @staticmethod
     def close():
-        db = getattr(flask_g, "_db", None)
+        db = flask_g.get("_db", None)
         if db is not None:
             db.close()
             flask_g._db = None
 
     @staticmethod
-    @contextmanager
-    def connection():
-        """Context manager that opens a short-lived connection and closes it on exit.
-           Use this for background tasks and per-operation DB access.
-        """
-        conn = sqlite3.connect(DB_FILE, detect_types=sqlite3.PARSE_DECLTYPES, timeout=30)
-        try:
-            conn.row_factory = sqlite3.Row
-            conn.execute("PRAGMA foreign_keys = ON")
-            conn.execute("PRAGMA journal_mode = WAL")
-            conn.execute("PRAGMA synchronous = NORMAL")
-            yield conn
-        finally:
-            conn.close()
-
-    @staticmethod
     def init_db():
         # safe one-shot init using a short-lived connection
-        with DButils.connection() as conn:
+        with DButils.connect() as conn:
             conn.executescript(GLOBALSCHEMA)
             conn.commit()
-        print("DB Initialized")
+        DButils.close()
 
-    @staticmethod
-    def syncAll():
-        steps = [
-            ("Initialize DB...  ", DButils.init_db),
-            ("Import reads...   ", ReadsAPI.importFromDir),
-        ]
-        for i, (label, func) in enumerate(steps, 1):
-            print(f"[{i}/{len(steps)}] {label}", end='', flush=True)
-            func()
-        print("Synchronized all data sources.")
-        return {"status": "success"}
-
-
-class ReadsAPI:
-    @staticmethod
-    @lru_cache(maxsize=512)
-    def pageList(offset: int = 0, limit: int = PREVIEWLIMIT, query: str = "") -> Dict[str, Any]:
-        # open/close connection per operation
-        where = ""
-        params_select: List[Any] = []
-        params_count: List[Any] = []
-
-        if query:
-            where = " WHERE title LIKE ? OR creator LIKE ?"
-            qparam = f"%{query}%"
-            params_select.extend([qparam, qparam])
-            params_count.extend([qparam, qparam])
-
-        sql_count = f"SELECT COUNT(*) FROM reads{where}"
-        sql = f"SELECT * FROM reads{where} ORDER BY created DESC LIMIT ? OFFSET ?"
-
-        with DButils.connection() as conn:
-            # total count
-            cursor = conn.execute(sql_count, params_count)
-            total = cursor.fetchone()[0]
-
-            # fetch items (use fresh params list to avoid mutation issues)
-            params = list(params_select) + [limit, offset]
-            cursor = conn.execute(sql, params)
-            rows = cursor.fetchall()
-
-            return {
-                "items": [dict(row) for row in rows],
-                "total": total
-            }
-
-    @staticmethod
-    def importFromDir() -> bool:
-        dirPath = Path(PAGEDIR)
-        if not dirPath.exists():
-            print("[Import] Directory does not exist:", dirPath)
-            return False
-
-        fmRegex = re.compile(r"^---\s*(.*?)---\s*(.*)$", re.DOTALL)
-
-        # use a short-lived connection for bulk import
-        with DButils.connection() as conn:
-            for file in dirPath.rglob("*.md"):
-                text = file.read_text(encoding="utf-8")
-                meta = {"uuid": file.stem, "title": file.stem, "creator": "imported", "type": "article", "date": datetime.now(timezone.utc).isoformat()}
-
-                m = fmRegex.match(text)
-                body = text
-                if m:
-                    front, body = m.groups()
-                    for line in front.splitlines():
-                        if ":" in line:
-                            k, v = line.split(":", 1)
-                            meta[k.strip()] = v.strip()
-
-                # Sync author field if present in front-matter
-                meta["creator"] = meta.get("author", meta["creator"])
-
-                preview = text_snippet(body, PREVIEWWORD)
-
-                # Ensure path is included in the INSERT statement
-                path = meta.get("path", "")  # Default to an empty string if path is not provided
-
-                conn.execute(
-                    """
-                    INSERT OR REPLACE INTO reads
-                    (uuid, title, creator, created, type, preview, path)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    [meta["uuid"], meta["title"], meta["creator"], meta["date"], meta["type"], preview, path],
-                )
-            conn.commit()
-            print(f"Imported: {conn.total_changes}")
-
-        # clear cached results to reflect newly imported data
-        ReadsAPI.clearCache()
-        return True
-
-    @staticmethod
-    @lru_cache(maxsize=512)
-    def read(uuid: str) -> Optional[Dict[str, Any]]:
-        with DButils.connection() as conn:
-            # Normalize UUID to handle both dashed and non-dashed formats
-            normalized_uuid = f"{uuid[0:8]}-{uuid[8:12]}-{uuid[12:16]}-{uuid[16:20]}-{uuid[20:32]}"
-            cursor = conn.execute("SELECT * FROM reads WHERE uuid = ?", [normalized_uuid])
-            row = cursor.fetchone()
-            if not row:
-                return None
-            row = dict(row)
-            created_iso = row["created"].replace("'", "")
-
-            md_path = Path(PAGEDIR) / datetime.fromisoformat(created_iso).strftime("%Y/%m/%d") / f"{normalized_uuid}.md"
-
-            if md_path.exists():
-                text = md_path.read_text(encoding="utf-8")
-            else:
-                text = row["preview"]
-
-            # Strip YAML front-matter
-            m = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.DOTALL)
-            if m:
-                _, content = m.groups()
-            else:
-                content = text.strip()
-
-            del row["preview"]
-
-            return {**dict(row), "content": content.strip()}
-
-
-    @staticmethod
-    def clearCache() -> None:
-        # clear lru_cache wrappers if present
-        try:
-            ReadsAPI.pageList.cache_clear()
-            ReadsAPI.read.cache_clear()
-        except Exception:
-            pass
-        print("Cache cleared.")
