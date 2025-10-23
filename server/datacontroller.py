@@ -39,7 +39,7 @@ import sqlite3
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Tuple
 from datetime import datetime
-from config import PAGEDIR, USERDATA, PREVIEWWORD
+from config import PAGEDIR, DB_FILE, PREVIEWWORD
 
 # --------------------------- utils -----------------------------------------
 
@@ -59,7 +59,6 @@ def zero_pad(n: int, width: int = 3) -> str:
 # --------------------------- path helpers ----------------------------------
 
 BASE_ROOT = Path(PAGEDIR)
-DB_FILE = USERDATA / "pages.db"
 
 def page_dir_for(uuid_: str) -> Path:
     prefix = uuid_[:2]
