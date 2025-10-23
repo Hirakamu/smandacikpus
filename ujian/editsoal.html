@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sistem Ujian SMAN 2 Cikarang Pusat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-white text-gray-900 font-sans">
+  <div class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- Header -->
+    <header class="items-center">
+      <div class="text-center">
+        <div class="font-bold text-lg">SMAN 2 Cikarang Pusat</div>
+        <div class="text-sm text-gray-500">Moving For Bright Future</div>
+      </div>
+    </header>
+
+    <main role="main" class="min-h-[70vh] py-8">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex flex-col md:flex-row gap-6">
+          <!-- Sidebar: Question List -->
+          <aside class="w-full md:w-1/3 bg-white border rounded-lg shadow-sm p-4">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold">Daftar Soal</h2>
+              <div class="flex gap-2">
+                <button id="btn-import" class="text-sm px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">Impor</button>
+                <button id="btn-new" class="text-sm px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700">Soal Baru</button>
+              </div>
+            </div>
+
+            <div id="questionsList" class="space-y-2 max-h-[56vh] overflow-auto"></div>
+
+            <div class="mt-4 text-xs text-gray-500">
+              Tip: Pilih soal untuk mengedit. Gunakan tombol Soal Baru untuk menambahkan soal.
+            </div>
+          </aside>
+
+          <!-- Editor -->
+          <section class="w-full md:w-2/3 bg-white border rounded-lg shadow-sm p-6">
+            <div class="flex items-start justify-between mb-4">
+              <h2 class="text-lg font-semibold" id="editorTitle">Editor Soal</h2>
+              <div class="flex gap-2">
+                <button id="btn-duplicate" class="px-3 py-1 text-sm bg-yellow-100 rounded hover:bg-yellow-200" title="Duplikat soal">Duplikat</button>
+                <button id="btn-delete" class="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200" title="Hapus soal">Hapus</button>
+              </div>
+            </div>
+
+            <form id="editorForm" class="space-y-4" onsubmit="return false;">
+              <input type="hidden" id="qId">
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Poin</label>
+                <input id="qPoints" type="number" min="0" class="mt-1 block w-36 rounded-md border-gray-300 shadow-sm" value="1">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Tipe Soal</label>
+                <select id="qType" class="mt-1 rounded-md border-gray-300">
+                  <option value="mcq">Pilihan Ganda</option>
+                  <option value="essay">Essay</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Pertanyaan</label>
+                <textarea id="qText" rows="4" class="mt-1 block w-full rounded-md border-gray-300"></textarea>
+              </div>
+
+              <!-- MCQ options area -->
+              <div id="mcqArea" class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-medium">Pilihan</h3>
+                  <button id="btn-add-option" class="text-sm px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700">Tambah Pilihan</button>
+                </div>
+                <div id="optionsList" class="space-y-2"></div>
+              </div>
+
+              <!-- Essay note -->
+              <div id="essayNote" class="hidden text-sm text-gray-500">
+                Soal essay tidak memiliki pilihan. Jawaban akan dikumpulkan sebagai teks.
+              </div>
+
+              <div class="flex items-center gap-3 pt-3">
+                <button id="btn-save" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Simpan</button>
+                <button id="btn-preview" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Pratinjau</button>
+                <div id="saveStatus" class="text-sm text-green-600 hidden">Tersimpan</div>
+              </div>
+            </form>
+          </section>
+        </div>
+      </div>
+
+      <script>
+        // Simple client-side dashboard for editing questions (persist to localStorage)
+        (function () {
+          const LS_KEY = 'cbt_questions_v1';
+          const el = {
+            list: document.getElementById('questionsList'),
+            btnNew: document.getElementById('btn-new'),
+            btnImport: document.getElementById('btn-import'),
+            qId: document.getElementById('qId'),
+            qText: document.getElementById('qText'),
+            qType: document.getElementById('qType'),
+            qPoints: document.getElementById('qPoints'),
+            mcqArea: document.getElementById('mcqArea'),
+            essayNote: document.getElementById('essayNote'),
+            optionsList: document.getElementById('optionsList'),
+            btnAddOption: document.getElementById('btn-add-option'),
+            btnSave: document.getElementById('btn-save'),
+            btnDelete: document.getElementById('btn-delete'),
+            btnDuplicate: document.getElementById('btn-duplicate'),
+            btnPreview: document.getElementById('btn-preview'),
+            editorTitle: document.getElementById('editorTitle'),
+            saveStatus: document.getElementById('saveStatus')
+          };
+
+          let questions = [];
+          let selectedId = null;
+
+          function readStorage() {
+            try {
+              const raw = localStorage.getItem(LS_KEY);
+              questions = raw ? JSON.parse(raw) : [];
+            } catch (e) {
+              questions = [];
+            }
+          }
+
+          function writeStorage() {
+            localStorage.setItem(LS_KEY, JSON.stringify(questions));
+            showSaved();
+          }
+
+          function showSaved() {
+            el.saveStatus.classList.remove('hidden');
+            setTimeout(() => el.saveStatus.classList.add('hidden'), 1500);
+          }
+
+          function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+          function ensureDefault() {
+            if (questions.length === 0) {
+              questions.push({
+                id: uid(),
+                type: 'mcq',
+                points: 1,
+                text: 'Contoh soal: Apa warna langit?',
+                options: [
+                  { id: uid(), text: 'Biru', correct: true },
+                  { id: uid(), text: 'Hijau', correct: false },
+                  { id: uid(), text: 'Merah', correct: false },
+                  { id: uid(), text: 'Kuning', correct: false }
+                ]
+              });
+              writeStorage();
+            }
+          }
+
+          function renderList() {
+            el.list.innerHTML = '';
+            questions.forEach(q => {
+              const item = document.createElement('div');
+              item.className = 'flex items-start justify-between p-2 rounded border hover:bg-gray-50 cursor-pointer';
+              if (q.id === selectedId) item.classList.add('bg-blue-50', 'border-blue-200');
+
+              item.onclick = () => selectQuestion(q.id);
+
+              const left = document.createElement('div');
+              left.className = 'text-sm';
+              left.innerHTML = `<div class="font-medium">${q.text.slice(0, 80) || '(Tidak ada teks)'}</div>
+                                <div class="text-xs text-gray-500">${q.type.toUpperCase()} • ${q.points} point(s)</div>`;
+
+              const right = document.createElement('div');
+              right.className = 'text-right text-xs flex flex-col items-end gap-1';
+              const btnUp = document.createElement('button');
+              btnUp.className = 'text-xs px-2 py-1 rounded text-gray-600 hover:bg-gray-100';
+              btnUp.textContent = '↑';
+              btnUp.title = 'Pindah ke atas';
+              btnUp.onclick = (ev) => { ev.stopPropagation(); moveQuestion(q.id, -1); };
+
+              const btnDown = document.createElement('button');
+              btnDown.className = 'text-xs px-2 py-1 rounded text-gray-600 hover:bg-gray-100';
+              btnDown.textContent = '↓';
+              btnDown.title = 'Pindah ke bawah';
+              btnDown.onclick = (ev) => { ev.stopPropagation(); moveQuestion(q.id, 1); };
+
+              right.appendChild(btnUp);
+              right.appendChild(btnDown);
+
+              item.appendChild(left);
+              item.appendChild(right);
+              el.list.appendChild(item);
+            });
+          }
+
+          function moveQuestion(id, dir) {
+            const idx = questions.findIndex(q => q.id === id);
+            if (idx < 0) return;
+            const newIdx = idx + dir;
+            if (newIdx < 0 || newIdx >= questions.length) return;
+            const [q] = questions.splice(idx, 1);
+            questions.splice(newIdx, 0, q);
+            writeStorage();
+            renderList();
+          }
+
+          function selectQuestion(id) {
+            selectedId = id;
+            renderEditor();
+            renderList();
+          }
+
+          function renderEditor() {
+            const q = questions.find(x => x.id === selectedId) || null;
+            if (!q) {
+              el.editorTitle.textContent = 'Editor Soal';
+              el.qId.value = '';
+              el.qText.value = '';
+              el.qType.value = 'mcq';
+              el.qPoints.value = 1;
+              el.optionsList.innerHTML = '';
+              toggleTypeAreas('mcq');
+              return;
+            }
+            el.editorTitle.textContent = 'Editor Soal — ' + (q.type === 'mcq' ? 'Pilihan Ganda' : 'Essay');
+            el.qId.value = q.id;
+            el.qText.value = q.text || '';
+            el.qType.value = q.type;
+            el.qPoints.value = q.points || 1;
+            toggleTypeAreas(q.type);
+            if (q.type === 'mcq') {
+              el.optionsList.innerHTML = '';
+              q.options = q.options || [];
+              q.options.forEach(opt => {
+                const row = optionRow(opt.id, opt.text, !!opt.correct);
+                el.optionsList.appendChild(row);
+              });
+            } else {
+              el.optionsList.innerHTML = '';
+            }
+          }
+
+          function toggleTypeAreas(type) {
+            if (type === 'mcq') {
+              el.mcqArea.classList.remove('hidden');
+              el.essayNote.classList.add('hidden');
+            } else {
+              el.mcqArea.classList.add('hidden');
+              el.essayNote.classList.remove('hidden');
+            }
+          }
+
+          function optionRow(id = uid(), text = '', correct = false) {
+            const wrap = document.createElement('div');
+            wrap.className = 'flex items-center gap-2';
+
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'correct';
+            radio.checked = correct;
+            radio.className = 'w-4 h-4';
+            radio.onchange = () => {
+              // mark this as correct in DOM; save will collect
+              // ensure radio exclusivity handled by input name
+            };
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = text;
+            input.placeholder = 'Teks pilihan';
+            input.className = 'flex-1 rounded border-gray-300 px-2 py-1';
+
+            const btnDel = document.createElement('button');
+            btnDel.type = 'button';
+            btnDel.className = 'text-sm px-2 py-1 rounded bg-red-100 text-red-700';
+            btnDel.textContent = 'Hapus';
+            btnDel.onclick = () => wrap.remove();
+
+            // store id on element
+            wrap.dataset.optId = id;
+            wrap.appendChild(radio);
+            wrap.appendChild(input);
+            wrap.appendChild(btnDel);
+            return wrap;
+          }
+
+          function addNewQuestion() {
+            const q = {
+              id: uid(),
+              type: 'mcq',
+              points: 1,
+              text: '',
+              options: [
+                { id: uid(), text: '', correct: true },
+                { id: uid(), text: '', correct: false }
+              ]
+            };
+            questions.push(q);
+            writeStorage();
+            selectQuestion(q.id);
+            renderList();
+          }
+
+          function addOptionToEditor() {
+            el.optionsList.appendChild(optionRow());
+          }
+
+          function updateFromEditor() {
+            const id = el.qId.value;
+            const type = el.qType.value;
+            const points = Number(el.qPoints.value) || 0;
+            const text = el.qText.value.trim();
+            let q;
+            if (!id) {
+              // new ephemeral question
+              q = { id: uid(), type, points, text, options: [] };
+              questions.push(q);
+            } else {
+              q = questions.find(x => x.id === id);
+              if (!q) return;
+              q.type = type;
+              q.points = points;
+              q.text = text;
+            }
+
+            if (type === 'mcq') {
+              const rows = Array.from(el.optionsList.children);
+              const opts = rows.map(row => {
+                const optId = row.dataset.optId || uid();
+                const input = row.querySelector('input[type="text"]');
+                const radio = row.querySelector('input[type="radio"]');
+                return { id: optId, text: (input?.value || '').trim(), correct: !!radio?.checked };
+              }).filter(o => o.text !== '');
+              // ensure at least one correct
+              if (opts.length && !opts.some(o => o.correct)) opts[0].correct = true;
+              q.options = opts;
+            } else {
+              q.options = [];
+            }
+
+            selectedId = q.id;
+            writeStorage();
+            renderList();
+            renderEditor();
+          }
+
+          function deleteSelected() {
+            if (!selectedId) return;
+            if (!confirm('Hapus soal ini?')) return;
+            const idx = questions.findIndex(q => q.id === selectedId);
+            if (idx >= 0) questions.splice(idx, 1);
+            selectedId = questions.length ? questions[0].id : null;
+            writeStorage();
+            renderList();
+            renderEditor();
+          }
+
+          function duplicateSelected() {
+            if (!selectedId) return;
+            const q = questions.find(x => x.id === selectedId);
+            if (!q) return;
+            const copy = JSON.parse(JSON.stringify(q));
+            copy.id = uid();
+            if (copy.options) copy.options = copy.options.map(o => ({ id: uid(), text: o.text, correct: o.correct }));
+            questions.push(copy);
+            writeStorage();
+            selectQuestion(copy.id);
+            renderList();
+          }
+
+          function previewSelected() {
+            const q = questions.find(x => x.id === selectedId);
+            if (!q) { alert('Pilih soal untuk pratinjau'); return; }
+            let html = 'PERTANYAAN:\\n\\n' + q.text + '\\n\\n';
+            if (q.type === 'mcq') {
+              q.options.forEach((o, i) => { html += `${String.fromCharCode(65 + i)}. ${o.text}\\n`; });
+            } else {
+              html += '(Essay)';
+            }
+            alert(html);
+          }
+
+          function importJSON() {
+            const raw = prompt('Tempel JSON soal (array) untuk impor:');
+            if (!raw) return;
+            try {
+              const arr = JSON.parse(raw);
+              if (!Array.isArray(arr)) throw new Error('Bukan array');
+              // basic normalization
+              arr.forEach(item => {
+                item.id = uid();
+                if (!item.type) item.type = 'mcq';
+                if (item.type === 'mcq' && !Array.isArray(item.options)) item.options = [];
+              });
+              questions = questions.concat(arr);
+              writeStorage();
+              renderList();
+              alert('Impor selesai');
+            } catch (e) {
+              alert('Gagal mengimpor: ' + e.message);
+            }
+          }
+
+          // events
+          el.btnNew.addEventListener('click', () => addNewQuestion());
+          el.btnAddOption.addEventListener('click', (e) => { e.preventDefault(); addOptionToEditor(); });
+          el.btnSave.addEventListener('click', () => updateFromEditor());
+          el.btnDelete.addEventListener('click', () => deleteSelected());
+          el.btnDuplicate.addEventListener('click', () => duplicateSelected());
+          el.btnPreview.addEventListener('click', () => previewSelected());
+          el.qType.addEventListener('change', (e) => toggleTypeAreas(e.target.value));
+          el.btnImport.addEventListener('click', () => importJSON());
+
+          // init
+          readStorage();
+          ensureDefault();
+          const first = questions[0] ? questions[0].id : null;
+          selectedId = first;
+          renderList();
+          renderEditor();
+        })();
+      </script>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t mt-10 pt-4 text-sm text-gray-500">
+      <div class="w-full text-center">Hak Cipta &copy; 2025 SMAN 2 Cikarang Pusat</div>
+      <div class="muted text-center text-gray-400">Siswa Kelas 11</div>
+    </footer>
+  </div>
+</body>
+
+</html>

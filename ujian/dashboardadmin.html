@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sistem Ujian SMAN 2 Cikarang Pusat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-white text-gray-900 font-sans">
+  <div class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- Header -->
+    <header class="items-center">
+      <div class="text-center">
+        <div class="font-bold text-lg">SMAN 2 Cikarang Pusat</div>
+        <div class="text-sm text-gray-500">Moving For Bright Future</div>
+      </div>
+    </header>
+
+    <div class="mt-4 flex items-center justify-between">
+      <div class="text-sm text-gray-600">Halo, <span class="font-medium">user</span></div>
+    </div>
+
+    <!-- Dashboard -->
+    <section class="mt-6 space-y-6">
+
+      <!-- Top stats -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white border rounded-lg shadow-sm p-4">
+          <div class="flex items-center">
+            <div class="flex-1">
+              <div class="text-sm text-gray-500">Sesi Berlangsung</div>
+              <div class="text-2xl font-semibold">823</div>
+            </div>
+            <div class="text-indigo-500">
+              <!-- simple icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border rounded-lg shadow-sm p-4">
+          <div class="flex items-center">
+            <div class="flex-1">
+              <div class="text-sm text-gray-500">Siswa Hadir</div>
+              <div class="text-2xl font-semibold">992</div>
+            </div>
+            <div class="text-green-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 10-8 0v4M3 21h18"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border rounded-lg shadow-sm p-4">
+          <div class="flex items-center">
+            <div class="flex-1">
+              <div class="text-sm text-gray-500">Siswa Tidak Hadir</div>
+              <div class="text-2xl font-semibold">12</div>
+            </div>
+            <div class="text-yellow-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border rounded-lg shadow-sm p-4">
+          <div class="flex items-center">
+            <div class="flex-1">
+              <div class="text-sm text-gray-500">Pengawas</div>
+              <div class="text-2xl font-semibold">27</div>
+            </div>
+            <div class="text-red-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 11V3L4.5 7.5M20 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left / Main (span 2 on large) -->
+        <div class="lg:col-span-2 space-y-6">
+
+          <!-- Exam schedule (timeline style) -->
+          <div class="bg-white border rounded-lg shadow-sm p-4">
+            <h3 class="text-lg font-semibold mb-3">Jadwal Ujian Hari Ini</h3>
+
+            <div class="relative">
+              <!-- vertical dashed line positioned under the markers -->
+              <div class="absolute left-28 top-6 bottom-6 border-l-2 border-dashed border-gray-200"></div>
+
+              <div class="space-y-6">
+                <div class="flex items-start">
+                  <div class="w-24 text-sm text-blue-600 font-semibold">15:30</div>
+                  <div class="flex-1 relative pl-6">
+                    <div class="absolute -left-10 top-1 w-4 h-4 rounded-full bg-white ring-4 ring-blue-600"></div>
+                    <div class="ml-2">
+                      <div class="font-medium">Ujian Pertama</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-start">
+                  <div class="w-24 text-sm text-blue-600 font-semibold">15:43</div>
+                  <div class="flex-1 relative pl-6">
+                    <div class="absolute -left-10 top-1 w-4 h-4 rounded-full bg-white ring-4 ring-blue-600"></div>
+                    <div class="ml-2">
+                      <div class="font-medium">Ujian Kedua</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-start">
+                  <div class="w-24 text-sm text-blue-600 font-semibold">16:05</div>
+                  <div class="flex-1 relative pl-6">
+                    <div class="absolute -left-10 top-1 w-4 h-4 rounded-full bg-white ring-4 ring-blue-600"></div>
+                    <div class="ml-2">
+                      <div class="font-medium">Ujian Ketiga</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right / Sidebar -->
+        <aside class="space-y-6">
+
+          <!-- Admin status -->
+          <div class="bg-white border rounded-lg shadow-sm p-4">
+            <h4 class="font-semibold mb-3">Status Admin Monitoring</h4>
+            <ul class="space-y-3 text-sm text-gray-700">
+              <li class="flex items-center justify-between">
+                <span>Admin A</span>
+                <span class="text-green-600 font-medium">Logged in</span>
+              </li>
+              <li class="flex items-center justify-between">
+                <span>Admin B</span>
+                <span class="text-yellow-600 font-medium">Mengawas</span>
+              </li>
+              <li class="flex items-center justify-between">
+                <span>Admin C</span>
+                <span class="text-gray-500 font-medium">Inactive</span>
+              </li>
+              <li class="flex items-center justify-between">
+                <span>Admin D</span>
+                <span class="text-green-600 font-medium">Logged in</span>
+              </li>
+              <li class="flex items-center justify-between">
+                <span>Admin E</span>
+                <span class="text-red-600 font-medium">Offline</span>
+              </li>
+            </ul>
+          </div>
+
+        </aside>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t mt-10 pt-4 text-sm text-gray-500">
+      <div class="w-full text-center">Hak Cipta &copy; 2025 SMAN 2 Cikarang Pusat</div>
+      <div class="muted text-center text-gray-400">Siswa Kelas 11</div>
+    </footer>
+  </div>
+</body>
+
+</html>
