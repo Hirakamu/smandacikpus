@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section id="home" class="grid md:grid-cols-3 gap-6 mt-6">
+    <div class="md:col-span-2 bg-blue-50 p-6 rounded-lg">
+        <h1 class="text-3xl font-bold mb-2">Sekolah SMAN 2 Cikarang Pusat</h1>
+        <p class="text-gray-600 mb-4">Sekolah yang berkomitmen untuk memberikan pendidikan berkualitas tinggi dan
+            membentuk karakter siswa menuju masa depan yang cerah.
+        </p>
+        <img src="{{ hero_image }}" alt="Foto Sekolah SMAN 2 Cikarang Pusat" class="rounded-lg shadow-md">
+    </div>
+    <aside id="news" class="space-y-4">
+        <h2 class="text-xl font-bold">Berita</h2>
+        <div class="grid md:grid-rows-3 gap-4">
+            {% if news %}
+            {% for item in news %}
+            <article class="bg-blue-50 shadow p-4 rounded">
+                <h3 class="font-semibold">{{ item.title }}</h3>
+                <p class="text-sm text-gray-500">{{ item.meta }}</p>
+                <p class="text-sm text-gray-600 mt-2">{{ item.description }}</p>
+            </article>
+            {% endfor %}
+            {% else %}
+            <p class="text-gray-600 bg-blue-50 shadow p-4 rounded">Tidak ada berita terbaru saat ini.</p>
+            {% endif %}
+        </div>
+    </aside>
+</section>
+{% if da}
+{% if data|length <= 3 %}
+  <section id="type1" class="mt-10">
+    <h2 class="text-2xl font-bold mb-3">Type1</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      {% for key, value in data['type1'].items() %}
+      <article class="bg-blue-50 shadow p-4 rounded">
+        <h3 class="font-semibold">{{ key }}</h3>
+        <p class="text-sm text-gray-600 mt-2">{{ value }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section id="type2" class="mt-10">
+    <h2 class="text-2xl font-bold mb-3">Type2</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      {% for key, value in data['type2'].items() %}
+      <article class="bg-blue-50 shadow p-4 rounded">
+        <h3 class="font-semibold">{{ key }}</h3>
+        <p class="text-sm text-gray-600 mt-2">{{ value }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section id="type3" class="mt-10">
+    <h2 class="text-2xl font-bold mb-3">Type3</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      {% for key, value in data['type3'].items() %}
+      <article class="bg-blue-50 shadow p-4 rounded">
+        <h3 class="font-semibold">{{ key }}</h3>
+        <p class="text-sm text-gray-600 mt-2">{{ value }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+{% else %}
+  {% for type, items in data.items() %}
+  <section id="{{ type }}" class="mt-10">
+    <h2 class="text-2xl font-bold mb-3">{{ type|capitalize }}</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      {% for key, value in items.items() %}
+      <article class="bg-blue-50 shadow p-4 rounded">
+        <h3 class="font-semibold">{{ key }}</h3>
+        <p class="text-sm text-gray-600 mt-2">{{ value }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+{% else %}
+<p class="text-gray-600 bg-blue-50 shadow p-4 rounded mt-10">Tidak ada data untuk ditampilkan saat ini.</p>
+{% endif %}
+
+<!-- About -->
+<section id="about" class="mt-10">
+    <h2 class="text-2xl font-bold mb-3">Tentang Kami</h2>
+    <p class="text-gray-600 mb-4">Didirikan pada tahun 2005, SMAN 2 Cikarang Pusat telah menjadi pusat
+        keunggulan akademis dan
+        pengembangan holistik. Kurikulum kami menyeimbangkan akademis yang ketat dengan kegiatan ekstrakurikuler
+        dan
+        layanan masyarakat.</p>
+    <div class="grid md:grid-cols-4 gap-4">
+        {% if teachers %}
+        {% for teacher in teachers %}
+        <div class="bg-blue-50 shadow p-4 rounded text-center">
+            <img src="{{ teacher.image }}" alt="Foto Guru {{ teacher.name }}"
+                class="w-20 h-20 rounded-full mx-auto mb-2">
+            <h3 class="font-semibold">{{ teacher.name }}</h3>
+            <p class="text-sm text-gray-500">{{ teacher.department }}</p>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-gray-600 bg-blue-50 shadow p-4 rounded">Tidak ada data guru tersedia saat ini.</p>
+        {% endif %}
+    </div>
+    <br>
+    <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-blue-50 p-4 rounded">
+            <h3 class="font-semibold mb-2">Misi</h3>
+            <ol class="list-decimal list-inside text-xs  text-gray-600 space-y-1">
+                <li>Menghasilkan lulusan berakhlak mulia;</li>
+                <li>Melaksanakan pembelajaran yang berkualitas;</li>
+                <li>Menghasilkan lulusan dengan kompetensi yang mumpuni, baik di bidang akademik maupun non
+                    akademik;</li>
+                <li>Mengembangkan potensi siswa berdasarkan talenta-talenta yang dimiliki;</li>
+                <li>Menghasilkan lulusan berkarakter, berintegritas dan mempunyai jiwa leadership;</li>
+                <li>Menumbuhkembangkan perilaku religius dalam diri peserta didik, sehingga dapat menghayati dan
+                    mengamalkan ajaran agama yang dianutnya dalam segala aspek kehidupan.</li>
+            </ol>
+        </div>
+        <div class="bg-blue-50 p-4 rounded">
+            <div class="bg-blue-50 p-4 rounded">
+                <h3 class="font-semibold mb-2">Visi</h3>
+                <p class="text-sm text-gray-600">Sekolah religius, unggul dalam prestasi, mampu berkompetisi di
+                    era globalisasi. berwawasan lingkungan yang dilandasi dengan peduli lingkungan serta Iman
+                    dan Takwa.</p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded">
+                <h3 class="font-semibold mb-2">Output</h3>
+                <p class="text-sm text-gray-600">Menghasilkan siswa dengan kompetensi yang mempuni dan berakhlak
+                    mulia.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
