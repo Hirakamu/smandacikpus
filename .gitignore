@@ -1,3 +1,8 @@
+node_modules/
+.env
+.DS_Store
+dist/
+*.log
 #user's venv
 .venv
 venv
@@ -22,3 +27,7 @@ data/
 
 # garbage going around
 *.json
+
+# idk
+school-frontend/
+rootfolder/
