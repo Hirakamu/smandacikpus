@@ -3,3 +3,5 @@ markdown
 requests
 pyyaml
 jwt
+flask-socketio
+eventlet
